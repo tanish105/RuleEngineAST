@@ -12,6 +12,17 @@ class Node:
             "left": self.left.to_dict() if self.left else None,
             "right": self.right.to_dict() if self.right else None
         }
+    
+    @classmethod
+    def from_dict(cls, data):
+        if data is None:
+            return None
+        return cls(
+            node_type=data['node_type'],
+            value=data['value'],
+            left=cls.from_dict(data['left']) if data.get('left') else None,
+            right=cls.from_dict(data['right']) if data.get('right') else None
+        )
 
 def parse_rule_string(rule_string):
     rule_string = rule_string.strip()
@@ -114,3 +125,131 @@ def combine_rules(rules):
         return Node(node_type="operator", value="AND", 
                    left=department_combined, right=other_combined)
     return department_combined or other_combined
+
+# Function to evaluate rules with a dictionary data
+# def evaluate_rule_logic(ast, data):
+#     def evaluate_node(node):
+#         if node.node_type == "operator":
+#             left_result = evaluate_node(node.left)
+#             right_result = evaluate_node(node.right)
+            
+#             if node.value == "AND":
+#                 return left_result and right_result
+#             elif node.value == "OR":
+#                 return left_result or right_result
+            
+#         elif node.node_type == "operand":
+#             # Parse the operand value into field, operator, and comparison value
+#             parts = node.value.split()
+#             field = parts[0]
+#             operator = parts[1]
+#             # Handle string values with quotes
+#             if len(parts) > 3:  # Case for strings with spaces
+#                 comparison_value = ' '.join(parts[2:]).strip("'\"")
+#             else:
+#                 comparison_value = parts[2].strip("'\"")
+            
+#             # Get the actual value from data
+#             if field not in data:
+#                 return False
+            
+#             actual_value = data[field]
+            
+#             # Convert comparison value to appropriate type based on actual value
+#             if isinstance(actual_value, (int, float)):
+#                 try:
+#                     comparison_value = float(comparison_value)
+#                 except ValueError:
+#                     return False
+            
+#             # Perform the comparison
+#             if operator == '>':
+#                 return actual_value > comparison_value
+#             elif operator == '<':
+#                 return actual_value < comparison_value
+#             elif operator == '>=':
+#                 return actual_value >= comparison_value
+#             elif operator == '<=':
+#                 return actual_value <= comparison_value
+#             elif operator == '=':
+#                 return actual_value == comparison_value
+#             elif operator == '!=':
+#                 return actual_value != comparison_value
+#             else:
+#                 raise ValueError(f"Unsupported operator: {operator}")
+        
+#         return False
+
+#     return evaluate_node(ast)
+
+def evaluate_rule_logic(ast, data):
+    def evaluate_node(node):
+        if node.node_type == "operator":
+            left_result = evaluate_node(node.left)
+            right_result = evaluate_node(node.right)
+            
+            if node.value == "AND":
+                return left_result and right_result
+            elif node.value == "OR":
+                return left_result or right_result
+            
+        elif node.node_type == "operand":
+            # Parse the operand value into field, operator, and comparison value
+            parts = node.value.split()
+            if len(parts) < 3:
+                raise ValueError(f"Invalid operand format: {node.value}")
+                
+            field = parts[0]
+            operator = parts[1]
+            # Handle string values with quotes
+            if len(parts) > 3:  # Case for strings with spaces
+                comparison_value = ' '.join(parts[2:]).strip("'\"")
+            else:
+                comparison_value = parts[2].strip("'\"")
+            
+            # Get the actual value from data
+            if field not in data:
+                return False
+            
+            actual_value = data[field]
+            
+            # Type conversion and validation
+            try:
+                # If comparison value is numeric, both values should be numeric
+                if comparison_value.replace('.', '').isdigit():
+                    if not isinstance(actual_value, (int, float)):
+                        try:
+                            actual_value = float(actual_value)
+                        except (ValueError, TypeError):
+                            return False
+                    comparison_value = float(comparison_value)
+                else:
+                    # For string comparisons, convert both to strings
+                    actual_value = str(actual_value)
+                    comparison_value = str(comparison_value)
+            except (ValueError, TypeError):
+                return False
+            
+            # Perform the comparison
+            try:
+                if operator == '>':
+                    return actual_value > comparison_value
+                elif operator == '<':
+                    return actual_value < comparison_value
+                elif operator == '>=':
+                    return actual_value >= comparison_value
+                elif operator == '<=':
+                    return actual_value <= comparison_value
+                elif operator == '=':
+                    return actual_value == comparison_value
+                elif operator == '!=':
+                    return actual_value != comparison_value
+                else:
+                    raise ValueError(f"Unsupported operator: {operator}")
+            except TypeError:
+                # If comparison can't be performed (e.g., comparing string with number)
+                return False
+        
+        return False
+
+    return evaluate_node(ast)

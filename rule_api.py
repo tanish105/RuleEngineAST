@@ -1,10 +1,12 @@
 # Filename: rule_api.py
 from flask import Flask, request, jsonify
-from ast_structure import Node, combine_rules, parse_rule_string  # Import functions from ast_structure.py
+from ast_structure import Node, combine_rules, evaluate_rule_logic, parse_rule_string  # Import functions from ast_structure.py
 from mongodb import store_rule  # Import function to store the AST in MongoDB
 import uuid  # To generate unique rule IDs
+from flask_cors import CORS 
 
 app = Flask(__name__)
+CORS(app)
 
 # API endpoint to parse rule and create AST
 @app.route('/createRule', methods=['POST'])
@@ -71,6 +73,50 @@ def combine_rule():
         
     except Exception as e:
         return jsonify({"error": f"Error combining rules: {str(e)}"}), 500
+    
+@app.route('/evaluateRules', methods=['POST'])
+def evaluate_rule_endpoint():
+    # Extract rule AST and data from request body
+    request_data = request.get_json()
+    
+    if not request_data:
+        return jsonify({"error": "No data provided"}), 400
+    
+    ast_dict = request_data.get('rule')
+    data = request_data.get('data')
+    
+    # Validate input
+    if not ast_dict:
+        return jsonify({"error": "Rule AST must be provided"}), 400
+    
+    if not data:
+        return jsonify({"error": "Data must be provided"}), 400
+    
+    if not isinstance(data, dict):
+        return jsonify({"error": "Data must be a dictionary"}), 400
+    
+    try:
+        # Convert dictionary to Node object
+        ast = Node.from_dict(ast_dict)
+        
+        # Evaluate the rule
+        result = evaluate_rule_logic(ast, data)
+        
+        return jsonify({
+            "message": "Rule evaluated successfully",
+            "result": result,
+            "evaluated_data": data,
+            "rule": ast_dict
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "error": f"Error evaluating rule: {str(e)}",
+            "details": {
+                "rule": ast_dict,
+                "data": data
+            }
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
