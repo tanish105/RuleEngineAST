@@ -127,61 +127,6 @@ def combine_rules(rules):
     return department_combined or other_combined
 
 # Function to evaluate rules with a dictionary data
-# def evaluate_rule_logic(ast, data):
-#     def evaluate_node(node):
-#         if node.node_type == "operator":
-#             left_result = evaluate_node(node.left)
-#             right_result = evaluate_node(node.right)
-            
-#             if node.value == "AND":
-#                 return left_result and right_result
-#             elif node.value == "OR":
-#                 return left_result or right_result
-            
-#         elif node.node_type == "operand":
-#             # Parse the operand value into field, operator, and comparison value
-#             parts = node.value.split()
-#             field = parts[0]
-#             operator = parts[1]
-#             # Handle string values with quotes
-#             if len(parts) > 3:  # Case for strings with spaces
-#                 comparison_value = ' '.join(parts[2:]).strip("'\"")
-#             else:
-#                 comparison_value = parts[2].strip("'\"")
-            
-#             # Get the actual value from data
-#             if field not in data:
-#                 return False
-            
-#             actual_value = data[field]
-            
-#             # Convert comparison value to appropriate type based on actual value
-#             if isinstance(actual_value, (int, float)):
-#                 try:
-#                     comparison_value = float(comparison_value)
-#                 except ValueError:
-#                     return False
-            
-#             # Perform the comparison
-#             if operator == '>':
-#                 return actual_value > comparison_value
-#             elif operator == '<':
-#                 return actual_value < comparison_value
-#             elif operator == '>=':
-#                 return actual_value >= comparison_value
-#             elif operator == '<=':
-#                 return actual_value <= comparison_value
-#             elif operator == '=':
-#                 return actual_value == comparison_value
-#             elif operator == '!=':
-#                 return actual_value != comparison_value
-#             else:
-#                 raise ValueError(f"Unsupported operator: {operator}")
-        
-#         return False
-
-#     return evaluate_node(ast)
-
 def evaluate_rule_logic(ast, data):
     def evaluate_node(node):
         if node.node_type == "operator":
